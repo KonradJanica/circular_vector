@@ -124,9 +124,13 @@ class circular_buffer {
           ++start;
         } 
       }
-    // @brief  Removes the first indexed element by decrementing the start index
-    void pop_front();
-    // @brief  Removes the last indexed element by decrementing the end index
+    // @brief  Removes the first indexed element
+    void pop_front() {
+      alloc_.destroy(buffer_ + start_idx_);
+      ++start_idx_;
+      --size_;
+    }
+    // @brief  Removes the last indexed element
     void pop_back();
     // @brief  Adds an element to the head of the %circular_buffer
     //         and decrements the start index
@@ -138,16 +142,18 @@ class circular_buffer {
       if (end_idx_ == start_idx_ && !empty()) {
         reserve(capacity() * 1.5);
       } else if (end_idx_ == start_idx_) {
-        push_back(val); // Do a push_back only on empty case
-      } else {
+        // Do a push_back only on empty case
+        push_back(val);
+        return;
+      }
+
       if (start_idx_ == 0)
         start_idx_ = capacity() - 1;
       else
-      --start_idx_;
+        --start_idx_;
 
       buffer_[start_idx_] = val;
       ++size_;
-      }
     }
     // @brief  Adds an element to the tail of the %circular_buffer
     // @param  val  Element to be added

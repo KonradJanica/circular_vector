@@ -13,6 +13,8 @@ int main() {
     std::cout << test[x] << ",";
   }
   std::cout << std::endl;
+
+  test.pop_front();
   
   circular_buffer<int>::iterator it = test.begin();
   while (it != test.end()) {
