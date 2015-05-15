@@ -4,6 +4,8 @@
 #include <algorithm> // std::swap, std::max, std::lexicographical_compare, std::equal
 #include <stdexcept> // std::invalid_argument
 
+#include <iostream> // debug TODO remove
+
 // Forward declaration of iterator
 template <typename T_noconst, typename T, typename element_type = typename T::value_type>
 class circular_buffer_iterator;
@@ -52,7 +54,7 @@ class circular_buffer {
     explicit circular_buffer(size_type capacity = kDefaultCapacity)
       : size_(0), capacity_(capacity), start_idx_(capacity/2), end_idx_(capacity/2),
       buffer_(alloc_.allocate(capacity)) {
-        if (capacity <= 1) {
+        if (capacity <= 0) {
           throw std::invalid_argument("invalid capacity");
         }
       };
@@ -132,7 +134,21 @@ class circular_buffer {
     // @warn  If capacity has been reached, the function causes the container to
     //        reallocate its storage increasing its capacity to 1.5 * capacity.
     //        O(n) time and space required when this occurs
-    void push_front(const value_type &val);
+    void push_front(const value_type &val) {
+      if (end_idx_ == start_idx_ && size_ > 0) {
+        reserve(capacity() * 1.5);
+      } else if (end_idx_ == start_idx_) {
+        push_back(val); // Do a push_back only on empty case
+      } else {
+      if (start_idx_ == 0)
+        start_idx_ = capacity() - 1;
+      else
+      --start_idx_;
+
+      buffer_[start_idx_] = val;
+      ++size_;
+      }
+    }
     // @brief  Adds an element to the tail of the %circular_buffer
     // @param  val  Element to be added
     // @warn  If capacity has been reached, the function causes the container to

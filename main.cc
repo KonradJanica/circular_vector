@@ -7,7 +7,7 @@ int main() {
 
   // Test push back
   for (int x = 0; x < 13; ++x) {
-    test.push_back(x);
+    test.push_front(x);
   }
   for (size_t x = 0; x < test.size(); ++x) {
     std::cout << test[x] << ",";
