@@ -135,7 +135,7 @@ class circular_buffer {
     //        reallocate its storage increasing its capacity to 1.5 * capacity.
     //        O(n) time and space required when this occurs
     void push_front(const value_type &val) {
-      if (end_idx_ == start_idx_ && size_ > 0) {
+      if (end_idx_ == start_idx_ && !empty()) {
         reserve(capacity() * 1.5);
       } else if (end_idx_ == start_idx_) {
         push_back(val); // Do a push_back only on empty case
@@ -155,7 +155,7 @@ class circular_buffer {
     //        reallocate its storage increasing its capacity to 1.5 * capacity.
     //        O(n) time and space required when this occurs
     void push_back(const value_type &val) {
-      if (end_idx_ == start_idx_ && size_ > 0)
+      if (end_idx_ == start_idx_ && !empty())
         reserve(capacity() * 1.5);
 
       buffer_[end_idx_] = val;
