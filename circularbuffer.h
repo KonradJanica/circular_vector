@@ -89,8 +89,35 @@ class circular_buffer {
     // @return  Read-only (constant) maximum size
     size_type max_size() const { return alloc_.max_size(); };
     // @brief  Resizes the %circular_buffer to specified size
-    // @warn  Recreates entire %circular_buffer. O(N) time and space required
-    void resize() { }; // TODO
+    // @param  n  Number of elements the %circular_buffer should contain.
+    // @warn  Recreates entire %circular_buffer. O(n) time and space required.
+    //        If the number is smaller than the %circular_buffer's current size the
+    //        %circular_buffer is truncated, otherwise default constructed elements
+    //        are appended.
+    //        Capacity becomes the new size.
+    void resize(size_type n) {
+      if (n > size()) {
+        circular_buffer temp(n);
+        temp.assign(begin(), end());
+        swap(temp);
+      } else if (n < size()) {
+        // A more efficient method of doing this can be used
+        circular_buffer temp(n);
+        temp.assign(begin(), begin()+n);
+        swap(temp);
+      }
+    };
+    // @brief  Resizes the %circular_buffer to specified size
+    // @param  n    Number of elements the %circular_buffer should contain.
+    // @param  val  Data with which new elements should be populated.
+    // @warn  Recreates entire %circular_buffer. O(n) time and space required.
+    //        If the number is smaller than the %circular_buffer's current size the
+    //        %circular_buffer is truncated, otherwise new elements are populated
+    //        given data.
+    //        Capacity grows as per push_back(), i.e. Amortized O(n) space
+    void resize(size_type n, const value_type &val) {
+      assign(n, val);
+    };
     // @brief  Returns size of allocated storage capacity
     size_type capacity() const   { return capacity_; };
     // @brief  Returns true if there are elements in the %circular_buffer
@@ -118,7 +145,6 @@ class circular_buffer {
     // @warn  The assignment completely changes the %circular_buffer and the
     //        resulting %circular_buffer's size is the same as the number of 
     //        elements assigned. Old data will be lost
-    // TODO check website for another prototype
     template <typename iter>
       void assign(iter start, iter last) {
         if (size() != 0) 
@@ -126,8 +152,23 @@ class circular_buffer {
         while (start != last) {
           push_back(*start);
           ++start;
-        } 
+        }
       }
+    // @brief  Fills a %circular_buffer with the specified value in the
+    //         range [0, n)
+    // @param  n    Number of elements to be assigned
+    // @param  val  Value to be assigned
+    // @warn  The assignment completely changes the %circular_buffer and the
+    //        resulting %circular_buffer's size is the same as the number of 
+    //        elements assigned. Old data will be lost
+    void assign(size_type n, const value_type &val) {
+      if (size() != 0)
+        clear();
+      while (n != 0) {
+        push_back(val);
+        --n;
+      }
+    }
     // @brief  Removes the first indexed element
     // @warn  Undefined behaviour when calling on an empty %circular_buffer
     void pop_front() {

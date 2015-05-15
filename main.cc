@@ -19,6 +19,9 @@ int main() {
   test.pop_back();
   std::cout << test.size() << std::endl;
   std::cout << test.back() << std::endl;
+
+  test.assign(size_t(31), int(5));
+  std::cout << test.size() << std::endl;
   
   circular_buffer<int>::iterator it = test.begin();
   while (it != test.end()) {
