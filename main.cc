@@ -15,6 +15,10 @@ int main() {
   std::cout << std::endl;
 
   test.pop_front();
+  test.pop_back();
+  test.pop_back();
+  std::cout << test.size() << std::endl;
+  std::cout << test.back() << std::endl;
   
   circular_buffer<int>::iterator it = test.begin();
   while (it != test.end()) {

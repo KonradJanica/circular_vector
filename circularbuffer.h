@@ -49,6 +49,10 @@ class circular_buffer {
 
     // CONSTANTS:
     static const size_type kDefaultCapacity = 5;
+    enum SelectIndex {
+      kStart = 0,
+      kEnd = 1,
+    };
 
     // CONSTRUCTORS:
     explicit circular_buffer(size_type capacity = kDefaultCapacity)
@@ -63,10 +67,10 @@ class circular_buffer {
     ~circular_buffer() {}; // TODO
 
     // ITERATORS
-    // begin(), the 0 represents buffer_[0]
+    // begin(), An iterator referring to buffer_[0], i.e. the first element
     iterator         begin()       { return iterator(this, 0); }
     const_iterator   begin() const { return const_iterator(this, 0); }
-    // end(), the size() represents buffer_[size()]
+    // end(), An iterator referring to buffer_[size()], i.e. past-the-end element
     iterator         end()         { return iterator(this, size()); }
     const_iterator   end() const   { return const_iterator(this, size()); }
     // rbegin()
@@ -125,13 +129,17 @@ class circular_buffer {
         } 
       }
     // @brief  Removes the first indexed element
+    // @warn  Undefined behaviour when calling on an empty %circular_buffer
     void pop_front() {
       alloc_.destroy(buffer_ + start_idx_);
-      ++start_idx_;
-      --size_;
+      increment(kStart);
     }
     // @brief  Removes the last indexed element
-    void pop_back();
+    // @warn  Undefined behaviour when calling on an empty %circular_buffer
+    void pop_back() {
+      decrement(kEnd);
+      alloc_.destroy(buffer_ + end_idx_);
+    }
     // @brief  Adds an element to the head of the %circular_buffer
     //         and decrements the start index
     // @param  val  Element to be added
@@ -147,13 +155,8 @@ class circular_buffer {
         return;
       }
 
-      if (start_idx_ == 0)
-        start_idx_ = capacity() - 1;
-      else
-        --start_idx_;
-
+      decrement(kStart);
       buffer_[start_idx_] = val;
-      ++size_;
     }
     // @brief  Adds an element to the tail of the %circular_buffer
     // @param  val  Element to be added
@@ -165,8 +168,7 @@ class circular_buffer {
         reserve(capacity() * 1.5);
 
       buffer_[end_idx_] = val;
-      ++size_;
-      end_idx_ = (end_idx_ + 1) % capacity_;
+      increment(kEnd);
     }
     // @brief  Removes all elements from the @circular_buffer (which are destroyed),
     //         leaving the container with a size of 0.
@@ -187,23 +189,31 @@ class circular_buffer {
     // @return  Read/write reference to data
     // @warn  Calling this function with an argument @a n that is out of range
     //        causes undefined behaviour
-    reference operator [] (size_type n) { return buffer_[(start_idx_ + n) % capacity_]; };
+    reference operator [] (size_type n) { return normalize(n); };
     // @brief  Provides access to the data contained in %circular_buffer
     // @param n The index of the element for which data should be accessed
     // @return  Read/write reference to data
     // @warn  Calling this function with an argument @a n that is out of range
     //        causes undefined behaviour
-    const_reference operator [] (size_type n) const;
+    const_reference operator [] (size_type n) const { return normalize(n); };
     // @brief  Provides access to the data contained in %circular_buffer
     // @param n The index of the element for which data should be accessed
     // @return  Read/write reference to data
     // @throw  std::out_of_range  If @a n is an invalid index
-    reference at(size_type n);
+    reference at(size_type n) {
+      if (n > size()-1)
+        throw std::out_of_range();
+      return normalize(n);
+    };
     // @brief  Provides access to the data contained in %circular_buffer
     // @param n The index of the element for which data should be accessed
     // @return  Read-only (constant) reference to data
     // @throw  std::out_of_range  If @a n is an invalid index
-    const_reference at(size_type n) const;
+    const_reference at(size_type n) const {
+      if (n > size()-1)
+        throw std::out_of_range();
+      return normalize(n);
+    };
     // @return  Read/Write reference to the first indexed element 
     //          in %circular_buffer
     // @warn  Calling this function on an empty container causes undefined
@@ -218,20 +228,26 @@ class circular_buffer {
     //          in %circular_buffer
     // @warn  Calling this function on an empty container causes undefined
     //        behaviour
-    reference back()         { return buffer_[end_idx_]; };
+    reference back()         { return *(end()-1); };
     // @return  Read-only (constant) reference to the last indexed element 
     //          in %circular_buffer
     // @warn  Calling this function on an empty container causes undefined
     //        behaviour
-    const_reference back()  const  { return buffer_[end_idx_]; };
+    const_reference back()  const  { return *(end()-1); };
 
 
   private:
+    // Number of elements in the %circular_buffer
     size_type size_;
+    // Currently allocatd memory of the %circular_buffer
     size_type capacity_;
+    // Index of the start of the %circular_buffer in buffer_
     size_type start_idx_;
+    // Index of the end of the %circular_buffer in buffer_
     size_type end_idx_;
+    // Defined Memory Allocator
     allocator_type alloc_;
+    // The Data Storage Array
     value_type * buffer_;
 
     // HELPER FUNCTIONS:
@@ -243,6 +259,52 @@ class circular_buffer {
       std::swap(start_idx_,   other.start_idx_);
       std::swap(end_idx_,   other.end_idx_);
       std::swap(buffer_,   other.buffer_);
+    }
+    // @brief  Increments the specified index and changes size appropriately
+    // @param  index  The enum representing 0 - start_idx_ or 1 - end_idx_
+    void increment(size_type index) {
+      switch(index) {
+        case kStart:
+          start_idx_ = (start_idx_ + 1) % capacity();
+          --size_;
+          break;
+        case kEnd:
+          end_idx_ = (end_idx_ + 1) % capacity_;
+          ++size_;
+          break;
+        default:
+          throw std::invalid_argument("invalid enumerator");
+      }
+    }
+    // @brief  Decrements the specified index and changes size appropriately
+    // @param  index  The enum representing 0 - start_idx_ or 1 - end_idx_
+    void decrement(size_type index) {
+      switch(index) {
+        case kStart:
+          if (start_idx_ == 0)
+            start_idx_ = capacity() - 1;
+          else
+            --start_idx_;
+          ++size_;
+          break;
+        case kEnd:
+          if (end_idx_ == 0)
+            end_idx_ = capacity() - 1;
+          else
+            --end_idx_;
+          --size_;
+          break;
+        default:
+          throw std::invalid_argument("invalid enumerator");
+      }
+    }
+    // @brief  Returns the given index normalized to the %circular_buffer wrapping
+    // @param n The index of the element for which data should be accessed
+    // @return  Read/write reference to data
+    // @warn  Calling this function with an argument @a n that is out of range
+    //        causes undefined behaviour
+    reference normalize(size_type n) {
+      return buffer_[(start_idx_ + n) % capacity_];
     }
 };
 
