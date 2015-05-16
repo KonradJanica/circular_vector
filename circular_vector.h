@@ -3,7 +3,7 @@
 ** support, and with no warranty, express or implied, as to its usefulness for
 ** any purpose.
 **
-** circular_buffer.h
+** circular_vector.h
 ** An STL-Compliant Circular Vector Container. Shares similarities to a Circular
 ** Buffer Data Structure, except allows access to all elements in the container.
 ** Contains all the same member functions as C++98 std::vector from the STL,
@@ -15,17 +15,17 @@
 ** Author: Konrad Janica
 ** -------------------------------------------------------------------------*/
 
-#ifndef CIRCULAR_BUFFER_HPP_
-#define CIRCULAR_BUFFER_HPP_
+#ifndef CIRCULAR_VECTOR_HPP_
+#define CIRCULAR_VECTOR_HPP_
 
 #include <algorithm> // std::swap, std::max, std::lexicographical_compare, std::equal
 #include <stdexcept> // std::invalid_argument, std::out_of_range
 
 // Forward declaration of iterator class
 template <typename T_noconst, typename T, typename element_type = typename T::value_type>
-class circular_buffer_iterator;
+class circular_vector_iterator;
 
-// An STL Compliant Circular Buffer Container
+// An STL Compliant Circular Vector Container
 //   This Data Structure is basically a centered wrapping vector with space at both sides
 //   to allow O(1) (constant time) insert/erase(front) as well as O(1) push_back and pop_back.
 //   Internal structure is an array with an index starting from the center of capacity
@@ -36,13 +36,13 @@ class circular_buffer_iterator;
 //   increasing its capacity to 1.5 * capacity.
 //     Like vectors, this makes push_back and push_front amortized time O(1)
 //     per insertion.
-//   The Default Capacity should be larger than 1 otherwise a Circular Buffer is
+//   The Default Capacity should be larger than 1 otherwise a Circular Vector is
 //   pointless.
 template <typename T, typename Alloc = std::allocator<T> >
-class circular_buffer {
+class circular_vector {
   public:
     // TYPEDEFS:
-    typedef circular_buffer<T, Alloc>            self_type;
+    typedef circular_vector<T, Alloc>            self_type;
     typedef Alloc                                allocator_type;
     typedef typename Alloc::value_type           value_type;
     typedef typename Alloc::pointer              pointer;
@@ -52,10 +52,10 @@ class circular_buffer {
     typedef typename Alloc::size_type            size_type;
     typedef typename Alloc::difference_type      difference_type;
     // Iterator
-    typedef circular_buffer_iterator <self_type, self_type> 
+    typedef circular_vector_iterator <self_type, self_type> 
       iterator;
     // Const Iterator
-    typedef circular_buffer_iterator <self_type,const self_type, const value_type> 
+    typedef circular_vector_iterator <self_type,const self_type, const value_type> 
       const_iterator;
     // Reverse Iterator
     typedef std::reverse_iterator<iterator>       reverse_iterator;
@@ -70,23 +70,23 @@ class circular_buffer {
     };
 
     // CONSTRUCTORS:
-    explicit circular_buffer(size_type capacity = kDefaultCapacity)
+    explicit circular_vector(size_type capacity = kDefaultCapacity)
       : size_(0), capacity_(capacity), start_idx_(capacity/2), end_idx_(capacity/2),
-      buffer_(alloc_.allocate(capacity)) {
+      array_(alloc_.allocate(capacity)) {
         if (capacity <= 0) {
           throw std::invalid_argument("invalid capacity");
         }
       };
 
     // DECONSTRUCTORS:
-    ~circular_buffer() {}; // TODO
+    ~circular_vector() {}; // TODO
 
     // ITERATORS
-    // begin(), An iterator referring to buffer_[0], i.e. the first element
+    // begin(), An iterator referring to array_[0], i.e. the first element
     // @warn  Iterator should be repositioned upon capacity reallocation or after push_front call
     iterator         begin()              { return iterator(this, 0); }
     const_iterator   begin() const        { return const_iterator(this, 0); }
-    // end(), An iterator referring to buffer_[size()], i.e. past-the-end element
+    // end(), An iterator referring to array_[size()], i.e. past-the-end element
     // @warn  Iterator should be repositioned upon capacity reallocation or after push_back call
     iterator         end()                { return iterator(this, size()); }
     const_iterator   end() const          { return const_iterator(this, size()); }
@@ -100,32 +100,32 @@ class circular_buffer {
     const_reverse_iterator rend() const   { return const_reverse_iterator(begin()); }
 
     // ALLOCATORS:
-    // @brief  Returns a copy of the allocator object associated with the @circular_buffer
+    // @brief  Returns a copy of the allocator object associated with the @circular_vector
     // @return  Read-only (constant) allocator
     allocator_type get_allocator() const  { return alloc_; };
 
     // CAPACITIES:
-    // @brief  Returns the amount of elements in the %circular_buffer
+    // @brief  Returns the amount of elements in the %circular_vector
     // @return  Read-only (constant) circular size
     size_type size() const     { return size_; };
-    // @brief  Returns the maximum number of elements that the %circular_buffer can hold
+    // @brief  Returns the maximum number of elements that the %circular_vector can hold
     //         during dynamic allocation mode
     // @return  Read-only (constant) maximum size
     size_type max_size() const { return alloc_.max_size(); };
-    // @brief  Resizes the %circular_buffer to specified size
-    // @param  n  Number of elements the %circular_buffer should contain.
+    // @brief  Resizes the %circular_vector to specified size
+    // @param  n  Number of elements the %circular_vector should contain.
     // @param  val  The value of the element to fill the extra size
     // @warn  This function changes the actual content of the container by inserting or
     //        erasing elements from it (unless @a n = size()).
-    //        If the number is smaller than the %circular_buffer's current size the
-    //        %circular_buffer is truncated, otherwise default (or specified) elements
+    //        If the number is smaller than the %circular_vector's current size the
+    //        %circular_vector is truncated, otherwise default (or specified) elements
     //        are appended until size reaches @a n size.
     //        If capacity needs to increase => capacity becomes @a n.
     //        Capacity never shrinks.
     void resize(size_type n, const value_type &val = value_type()) {
       if (n > size()) {
         if (n > capacity()) {
-          circular_buffer temp(n); // Capacity = n
+          circular_vector temp(n); // Capacity = n
           temp.assign(begin(), end());
           swap(temp);
         }
@@ -143,30 +143,30 @@ class circular_buffer {
     };
     // @brief  Returns size of allocated storage capacity
     size_type capacity() const { return capacity_; };
-    // @brief  Returns true if there are elements in the %circular_buffer
+    // @brief  Returns true if there are elements in the %circular_vector
     // @return  Read-only (constant) True iff end index is in default state 
     bool empty() const         { return !size_; };
-    // @brief  Request that the %circular_buffer capacity be at least enough to contain
-    //         n elements. This function has no effect on the %circular_buffer size and
+    // @brief  Request that the %circular_vector capacity be at least enough to contain
+    //         n elements. This function has no effect on the %circular_vector size and
     //         cannot alter its elements.
-    // @warn  If @a n is greater than the current %circular_buffer capacity, the function
+    // @warn  If @a n is greater than the current %circular_vector capacity, the function
     //        causes the container to reallocate its storage increasing its
     //        capacity to @a n (or greater). O(n) time and space required when this occurs
     void reserve(size_type n) {
       if (capacity() < n) {
-        circular_buffer temp( std::max<size_type>(n, capacity() * 1.5) );
+        circular_vector temp( std::max<size_type>(n, capacity() * 1.5) );
         temp.assign(begin(), end());
         swap(temp);
       }
     }
 
     // MODIFIERS:
-    // @brief  Fills a %circular_buffer with copies of the elements in the
+    // @brief  Fills a %circular_vector with copies of the elements in the
     //         range [start, last)
     // @param  start  An input iterator
     // @param  last   An input iterator
-    // @warn  The assignment completely changes the %circular_buffer and the
-    //        resulting %circular_buffer's size is the same as the number of 
+    // @warn  The assignment completely changes the %circular_vector and the
+    //        resulting %circular_vector's size is the same as the number of 
     //        elements assigned. Old data will be lost
     template <typename iter>
       void assign(iter start, iter last) {
@@ -177,12 +177,12 @@ class circular_buffer {
           ++start;
         }
       }
-    // @brief  Fills a %circular_buffer with the specified value in the
+    // @brief  Fills a %circular_vector with the specified value in the
     //         range [0, n)
     // @param  n    Number of elements to be assigned
     // @param  val  Value to be assigned
-    // @warn  The assignment completely changes the %circular_buffer and the
-    //        resulting %circular_buffer's size is the same as the number of 
+    // @warn  The assignment completely changes the %circular_vector and the
+    //        resulting %circular_vector's size is the same as the number of 
     //        elements assigned. Old data will be lost
     void assign(size_type n, const value_type &val) {
       if (size() != 0)
@@ -193,18 +193,18 @@ class circular_buffer {
       }
     }
     // @brief  Removes the first indexed element
-    // @warn  Undefined behaviour when calling on an empty %circular_buffer
+    // @warn  Undefined behaviour when calling on an empty %circular_vector
     void pop_front() {
-      alloc_.destroy(buffer_ + start_idx_);
+      alloc_.destroy(array_ + start_idx_);
       increment(kStart);
     }
     // @brief  Removes the last indexed element
-    // @warn  Undefined behaviour when calling on an empty %circular_buffer
+    // @warn  Undefined behaviour when calling on an empty %circular_vector
     void pop_back() {
       decrement(kEnd);
-      alloc_.destroy(buffer_ + end_idx_);
+      alloc_.destroy(array_ + end_idx_);
     }
-    // @brief  Adds an element to the head of the %circular_buffer
+    // @brief  Adds an element to the head of the %circular_vector
     //         and decrements the start index
     // @param  val  Element to be added
     // @warn  If capacity has been reached, the function causes the container to
@@ -220,9 +220,9 @@ class circular_buffer {
       }
 
       decrement(kStart);
-      buffer_[start_idx_] = val;
+      array_[start_idx_] = val;
     }
-    // @brief  Adds an element to the tail of the %circular_buffer
+    // @brief  Adds an element to the tail of the %circular_vector
     // @param  val  Element to be added
     // @warn  If capacity has been reached, the function causes the container to
     //        reallocate its storage increasing its capacity to 1.5 * capacity.
@@ -231,26 +231,26 @@ class circular_buffer {
       if (end_idx_ == start_idx_ && !empty())
         reserve(capacity() * 1.5);
 
-      buffer_[end_idx_] = val;
+      array_[end_idx_] = val;
       increment(kEnd);
     }
     // @brief  Exchanges the content of the container by the content of x, which is
-    //         another %circular_buffer object of the same type. Sizes may differ.
-    // @param  x  The %circular_buffer of the same type to swap with.
-    void swap(circular_buffer &x) {
+    //         another %circular_vector object of the same type. Sizes may differ.
+    // @param  x  The %circular_vector of the same type to swap with.
+    void swap(circular_vector &x) {
       std::swap(size_,       x.size_);
       std::swap(capacity_,   x.capacity_);
       std::swap(start_idx_,  x.start_idx_);
       std::swap(end_idx_,    x.end_idx_);
-      std::swap(buffer_,     x.buffer_);
+      std::swap(array_,      x.array_);
     }
-    // @brief  Removes all elements from the @circular_buffer (which are destroyed),
+    // @brief  Removes all elements from the @circular_vector (which are destroyed),
     //         leaving the container with a size of 0.
     // @warn  If the elements themselves are pointers, the pointed-to memory is not
     //        touched in any way. Managing the pointer is the user's responsibility.
     void clear() {
       for (size_type x = 0; x < capacity(); ++x) {
-        alloc_.destroy(buffer_ + x);
+        alloc_.destroy(array_ + x);
       }
       start_idx_ = capacity() / 2;
       end_idx_ = capacity() /2;
@@ -258,19 +258,19 @@ class circular_buffer {
     }
 
     // ELEMENT ACCESS:
-    // @brief  Provides access to the data contained in %circular_buffer
+    // @brief  Provides access to the data contained in %circular_vector
     // @param n The index of the element for which data should be accessed
     // @return  Read/write reference to data
     // @warn  Calling this function with an argument @a n that is out of range
     //        causes undefined behaviour
     reference operator [] (size_type n)             { return normalize(n); };
-    // @brief  Provides access to the data contained in %circular_buffer
+    // @brief  Provides access to the data contained in %circular_vector
     // @param n The index of the element for which data should be accessed
     // @return  Read/write reference to data
     // @warn  Calling this function with an argument @a n that is out of range
     //        causes undefined behaviour
     const_reference operator [] (size_type n) const { return normalize(n); };
-    // @brief  Provides access to the data contained in %circular_buffer
+    // @brief  Provides access to the data contained in %circular_vector
     // @param n The index of the element for which data should be accessed
     // @return  Read/write reference to data
     // @throw  std::out_of_range  If @a n is an invalid index
@@ -281,7 +281,7 @@ class circular_buffer {
         throw std::out_of_range("negative index");
       return normalize(n);
     };
-    // @brief  Provides access to the data contained in %circular_buffer
+    // @brief  Provides access to the data contained in %circular_vector
     // @param n The index of the element for which data should be accessed
     // @return  Read-only (constant) reference to data
     // @throw  std::out_of_range  If @a n is an invalid index
@@ -293,40 +293,40 @@ class circular_buffer {
       return normalize(n);
     };
     // @return  Read/Write reference to the first indexed element 
-    //          in %circular_buffer
+    //          in %circular_vector
     // @warn  Calling this function on an empty container causes undefined
     //        behaviour
-    reference front()              { return buffer_[start_idx_]; };
+    reference front()              { return array_[start_idx_]; };
     // @return  Read-only (constant) reference to the first indexed element 
-    //          in %circular_buffer
+    //          in %circular_vector
     // @warn  Calling this function on an empty container causes undefined
     //        behaviour
-    const_reference front() const  { return buffer_[start_idx_]; };
+    const_reference front() const  { return array_[start_idx_]; };
     // @return  Read/Write reference to the last indexed element 
-    //          in %circular_buffer
+    //          in %circular_vector
     // @warn  Calling this function on an empty container causes undefined
     //        behaviour
     reference back()               { return *(end()-1); };
     // @return  Read-only (constant) reference to the last indexed element 
-    //          in %circular_buffer
+    //          in %circular_vector
     // @warn  Calling this function on an empty container causes undefined
     //        behaviour
     const_reference back()  const  { return *(end()-1); };
 
 
   private:
-    // Number of elements in the %circular_buffer
+    // Number of elements in the %circular_vector
     size_type size_;
-    // Currently allocatd memory of the %circular_buffer
+    // Currently allocatd memory of the %circular_vector
     size_type capacity_;
-    // Index of the start of the %circular_buffer in buffer_
+    // Index of the start of the %circular_vector in array_
     size_type start_idx_;
-    // Index of the end of the %circular_buffer in buffer_
+    // Index of the end of the %circular_vector in array_
     size_type end_idx_;
     // Defined Memory Allocator
     allocator_type alloc_;
     // The Data Storage Array
-    value_type * buffer_;
+    value_type * array_;
 
     // HELPER FUNCTIONS:
     // @brief  Increments the specified index and changes size appropriately
@@ -367,58 +367,58 @@ class circular_buffer {
           throw std::invalid_argument("invalid enumerator");
       }
     }
-    // @brief  Returns the given index normalized to the %circular_buffer wrapping
+    // @brief  Returns the given index normalized to the %circular_vector wrapping
     // @param n The index of the element for which data should be accessed
     // @return  Read/write reference to data
     // @warn  Calling this function with an argument @a n that is out of range
     //        causes undefined behaviour
     reference normalize(size_type n) const {
-      return buffer_[(start_idx_ + n) % capacity()];
+      return array_[(start_idx_ + n) % capacity()];
     }
 };
 
 // RELATIONAL OPERATORS:
 // a==b
 template <typename T, typename Alloc>
-bool operator==(const circular_buffer<T, Alloc> &a, const circular_buffer<T, Alloc> &b) {
+bool operator==(const circular_vector<T, Alloc> &a, const circular_vector<T, Alloc> &b) {
   return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin());
 }
 // a!=b which is equivalent to !(a==b)
 template <typename T, typename Alloc>
-bool operator != (const circular_buffer<T, Alloc> &a, const circular_buffer<T, Alloc> &b) {
+bool operator != (const circular_vector<T, Alloc> &a, const circular_vector<T, Alloc> &b) {
   return !(a==b);
 }
 // a<b
 template <typename T, typename Alloc>
-bool operator < (const circular_buffer<T, Alloc> &a, const circular_buffer<T, Alloc> &b) {
+bool operator < (const circular_vector<T, Alloc> &a, const circular_vector<T, Alloc> &b) {
   return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end());
 }
 // a>b
 template <typename T, typename Alloc>
-bool operator > (const circular_buffer<T, Alloc> &a, const circular_buffer<T, Alloc> &b) {
+bool operator > (const circular_vector<T, Alloc> &a, const circular_vector<T, Alloc> &b) {
   return std::lexicographical_compare(b.begin(), b.end(), a.begin(), a.end());
 }
 // a<=b which is equivalent to !(b<a)
 template <typename T, typename Alloc>
-bool operator <= (const circular_buffer<T, Alloc> &a, const circular_buffer<T, Alloc> &b) {
+bool operator <= (const circular_vector<T, Alloc> &a, const circular_vector<T, Alloc> &b) {
   return !(b<a);
 }
 // a>=b which is equivalent to !(a<b)
 template <typename T, typename Alloc>
-bool operator >= (const circular_buffer<T, Alloc> &a, const circular_buffer<T, Alloc> &b) {
+bool operator >= (const circular_vector<T, Alloc> &a, const circular_vector<T, Alloc> &b) {
   return !(a<b);
 }
 
-// The iterator type for the %circular_buffer container.
+// The iterator type for the %circular_vector container.
 //   The following template class provides all variants of forward/reverse/const/noconst
 //   iterators using template properties.
-//   It is enough to instantiate it using %circular_buffer
-//   @sample usage: circular_buffer<int>::iterator it = foo.begin();
+//   It is enough to instantiate it using %circular_vector
+//   @sample usage: circular_vector<int>::iterator it = foo.begin();
 //                  foo++... etc.
 template <typename T_noconst, typename T, typename element_type>
-class circular_buffer_iterator {
+class circular_vector_iterator {
   public:
-    typedef circular_buffer_iterator<T_noconst,T,element_type> self_type;
+    typedef circular_vector_iterator<T_noconst,T,element_type> self_type;
 
     typedef std::random_access_iterator_tag     iterator_category;
     typedef typename T::value_type              value_type;
@@ -429,20 +429,20 @@ class circular_buffer_iterator {
     typedef typename T::const_reference         const_reference;
     typedef typename T::difference_type         difference_type;
 
-    circular_buffer_iterator(T * cbuffer, size_type index)
-      : cbuffer_(cbuffer), index_(index) {};
+    circular_vector_iterator(T * cbuffer, size_type index)
+      : carray_(cbuffer), index_(index) {};
 
     // Converting a non-const iterator to a const iterator
-    circular_buffer_iterator(const circular_buffer_iterator<T_noconst,
+    circular_vector_iterator(const circular_vector_iterator<T_noconst,
         T_noconst, typename T_noconst::value_type> &other)
-      : cbuffer_(other.cbuffer_), index_(other.index_) {};
+      : carray_(other.carray_), index_(other.index_) {};
 
-    friend class circular_buffer_iterator<const T, const T, const element_type>;
+    friend class circular_vector_iterator<const T, const T, const element_type>;
 
     // Use compiler generated copy constructor, copy assignment operator
     // and destructor
 
-    element_type &operator * ()  { return (*cbuffer_)[index_]; };
+    element_type &operator * ()  { return (*carray_)[index_]; };
     element_type *operator -> () { return &(operator * ()); };
 
     self_type &operator ++ () {
@@ -490,10 +490,10 @@ class circular_buffer_iterator {
     }
 
     bool operator == (const self_type &other) const {
-      return index_ == other.index_ && cbuffer_ == other.cbuffer_;
+      return index_ == other.index_ && carray_ == other.carray_;
     }
     bool operator != (const self_type &other) const {
-      return index_ != other.index_ && cbuffer_ == other.cbuffer_;
+      return index_ != other.index_ && carray_ == other.carray_;
     }
     bool operator >( const self_type &other) const {
       return index_ > other.index_;
@@ -509,20 +509,20 @@ class circular_buffer_iterator {
     }
 
   private:
-    T * cbuffer_;
+    T * carray_;
     size_type  index_;
 };
 
-template <typename circular_buffer_iterator_t>
-circular_buffer_iterator_t operator + (const typename circular_buffer_iterator_t::difference_type &a,
-    const circular_buffer_iterator_t &b) {
-  return circular_buffer_iterator_t(a) + b;
+template <typename circular_vector_iterator_t>
+circular_vector_iterator_t operator + (const typename circular_vector_iterator_t::difference_type &a,
+    const circular_vector_iterator_t &b) {
+  return circular_vector_iterator_t(a) + b;
 }
 
-template <typename circular_buffer_iterator_t>
-circular_buffer_iterator_t operator - (const typename circular_buffer_iterator_t::difference_type &a,
-    const circular_buffer_iterator_t &b) {
-  return circular_buffer_iterator_t(a) - b;
+template <typename circular_vector_iterator_t>
+circular_vector_iterator_t operator - (const typename circular_vector_iterator_t::difference_type &a,
+    const circular_vector_iterator_t &b) {
+  return circular_vector_iterator_t(a) - b;
 }
 
 #endif
