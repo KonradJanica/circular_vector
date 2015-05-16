@@ -70,16 +70,72 @@ class circular_vector {
     };
 
     // CONSTRUCTORS:
-    explicit circular_vector(size_type capacity = kDefaultCapacity)
+    // @brief  Empty container constructor (default constructor).
+    //         Constructs an empty container, with no elements. With a specified amount of 
+    //         reserved space.
+    // @param  capacity  The starting allocated storage reserve
+    // @throws  std::invalid_argument  With negative capacity values
+    explicit circular_vector(size_type capacity = kDefaultCapacity, const allocator_type &alloc = allocator_type())
       : size_(0), capacity_(capacity), start_idx_(capacity/2), end_idx_(capacity/2),
-      array_(alloc_.allocate(capacity)) {
+      alloc_(alloc), array_(alloc_.allocate(capacity)) {
         if (capacity <= 0) {
           throw std::invalid_argument("invalid capacity");
         }
       };
+    // @brief  Fill constructor. Constructs a container with @a n elements. Each element is a copy of @a val.
+    // @param  n    The size and capacity of the %circular_vector
+    // @param  val  The data value to fill the %circular_vector
+    // @throws  std::invalid_argument  With negative size values
+    explicit circular_vector(size_type n, const value_type &val, const allocator_type &alloc = allocator_type())
+      : size_(0), capacity_(n), start_idx_(n/2), end_idx_(n/2),
+      alloc_(alloc), array_(alloc_.allocate(n)) {
+        if (n <= 0) {
+          throw std::invalid_argument("invalid capacity");
+        }
+        resize(n, val);
+      };
+
+    // @brief  Range constructor. Constructs a container with as many elements as the range [first,last), 
+    //         with each element constructed from its corresponding element in that range, in the same order.
+    // @param  first  The initial position to start the copy from
+    // @param  last   The final exclusive position of the copy range
+    template <class InputIterator>
+      vector (InputIterator first, InputIterator last, const allocator_type& alloc = allocator_type())
+      : size_(0), capacity_(last-first), start_idx_((last-first)/2), end_idx_((last-first)/2),
+      alloc_(alloc), array_(alloc_.allocate(last-first)) {
+        assign(first,last);
+      }
+    // @brief  Copy constructor. Constructs a container with a copy of each of the elements in x, in the same order.
+    // @param  x  Another vector object of the same type (with the same class template arguments T and Alloc), whose contents are copied.
+    circular_vector(const circular_vector &x)
+      : size_(0), capacity_(x.capacity()), start_idx_(x.capacity()/2), end_idx_(x.capacity()/2),
+      alloc_(x.get_allocator()), array_(x.get_allocator().allocate(x.capacity())) {
+        try {
+          assign(x.begin(), x.end());
+        } catch {
+          clear();
+          alloc_.deallocate(array_, capacity_);
+          throw std::length_error("out of memory");
+        }
+      }
+    // @brief  Move constructor. Assigns new contents to the container, replacing its current contents, and modifying its size accordingly.
+    // @param  x  A vector object of the same type (i.e., with the same template parameters, T and Alloc).
+    circular_vector &operator = (const self_type &x) {
+      size_ = 0;
+      capacity_ = x.capacity();
+      start_idx_ = x.capacity()/2;
+      end_idx_ = x.capacity()/2;
+      array_ = alloc_.allocate(x.capacity());
+
+      assign(x.begin(), x.end());
+      return *this;
+    }
 
     // DECONSTRUCTORS:
-    ~circular_vector() {}; // TODO
+    ~circular_vector() {
+      clear();
+      alloc_.deallocate(array_, capacity_);
+    };
 
     // ITERATORS
     // begin(), An iterator referring to array_[0], i.e. the first element
