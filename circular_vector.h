@@ -103,7 +103,13 @@ class circular_vector {
       circular_vector(InputIterator first, InputIterator last, const allocator_type& alloc = allocator_type())
       : size_(0), capacity_(last-first), start_idx_((last-first)/2), end_idx_((last-first)/2),
       alloc_(alloc), array_(alloc_.allocate(last-first)) {
-        assign(first,last);
+        try {
+          assign(first,last);
+        } catch (...) {
+          clear();
+          alloc_.deallocate(array_, capacity_);
+          throw std::length_error("out of memory");
+        }
       }
     // @brief  Copy constructor. Constructs a container with a copy of each of the elements in x, in the same order.
     // @param  x  Another vector object of the same type (with the same class template arguments T and Alloc), whose contents are copied.
