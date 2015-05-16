@@ -1,4 +1,4 @@
-##circular_vector##
+##CIRCULAR_VECTOR##
 An STL-Compliant Circular Vector (Container) Data Structure written in C++
 
 Shares similaries to a Circular Buffer Data Structure, except allows access to all elements in the container.
@@ -36,7 +36,7 @@ circular_vector(size_type capacity = kDefaultCapacity)
 
 ##ALLOCATORS:##
 **<dt>circular_vector::_get_allocator_</dt>**
-`allocator\_type get\_allocator() const;`
+`allocator_type get_allocator() const;`
 <dd><em>@brief</em> <ul>Returns a copy of the allocator object associated with the @circular_vector</ul></dd>
 <dd><em>@return</em> <ul>  Read-only (constant) allocator</ul></dd>
 
