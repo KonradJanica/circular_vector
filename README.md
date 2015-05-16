@@ -9,22 +9,23 @@ Contains all the same member functions as C++98 std::vector from the STL, except
 circular_vector(size_type capacity = kDefaultCapacity)
 
 #ITERATORS:#
-circular_vector::begin
-@brief  An iterator pointing to array\_[0], i.e. the first element
-@warn  Iterator should be repositioned upon capacity reallocation or after push_front call
-      `iterator begin();`
+**<dt>circular_vector::_begin_</dt>**
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>iterator begin();</code></p>
 `const_iterator begin() const;`
+<dd><em>@brief</em>  <ul>An iterator pointing to array\_[0], i.e. the first element</ul></dd>
+<dd><em>@warn</em>  <ul>Iterator should be repositioned upon capacity reallocation or after push_front call</ul></dd>
 
-circular_vector::end
+
+#####*circular_vector::end*#####
 @brief  An iterator pointing to array\_[size()], i.e. past-the-end element
 @warn  Iterator should be repositioned upon capacity reallocation or after push_back call
-      `iterator end();`
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<code>iterator end();</code></p>
 `const_iterator end() const;`
 
 circular_vector::rbegin
 @brief  Returns a reverse iterator pointing to the last element in the vector (i.e., its reverse beginning). Reverse iterators iterate backwards: increasing them moves them towards the beginning of the container. rbegin points to the element right before the one that would be pointed to by member end. Notice that unlike member vector::back, which returns a reference to this same element, this function returns a reverse random access iterator.
 @warn  Iterator should be repositioned upon capacity reallocation or after push_back call
-      `reverse_iterator rbegin();`
+`reverse_iterator rbegin();`
 `const_reverse_iterator rbegin() const;`
 
 circular_vector::rend
