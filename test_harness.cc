@@ -1,8 +1,8 @@
-#include "circular_vector.h"
+#include "circularbuffer.h"
 
 #include <iostream>
 
-void Print(circular_vector<int> input);
+void Print(circular_buffer<int> input);
 
 void TestMethods();
 void TestObjectOperators();
@@ -20,8 +20,8 @@ int main() {
   TestIteratorAccess();
 }
 
-// Prints all elements in the %circular_vector
-void Print(circular_vector<int> input) {
+// Prints all elements in the %circular_buffer
+void Print(circular_buffer<int> input) {
   for (size_t x = 0; x < input.size(); ++x) {
     std::cout << input.at(x) << ",";
   }
@@ -31,9 +31,9 @@ void Print(circular_vector<int> input) {
 // Test Methods
 void TestMethods() {
   std::cout << "======================================================" << std::endl;
-  std::cout << "TESTING CIRCULAR_VECTOR PUSH_BACK METHOD" << std::endl;
+  std::cout << "TESTING CIRCULAR_BUFFER PUSH_BACK METHOD" << std::endl;
 
-  circular_vector<int> test1;
+  circular_buffer<int> test1;
 
   size_t count = 0;
   std::cout << "Pushing back: ";
@@ -43,7 +43,7 @@ void TestMethods() {
     ++count;
   }
   std::cout << std::endl;
-  std::cout << "Printing circular_vector: ";
+  std::cout << "Printing circular_buffer: ";
   Print(test1);
   if (count == test1.size())
     std::cout << "Push_back method passes" << std::endl;
@@ -51,7 +51,7 @@ void TestMethods() {
     std::cout << "Push_back method fails" << std::endl;
 
   std::cout << "======================================================" << std::endl;
-  std::cout << "TESTING CIRCULAR_VECTOR POP_BACK METHOD" << std::endl;
+  std::cout << "TESTING CIRCULAR_BUFFER POP_BACK METHOD" << std::endl;
 
   std::cout << "Popping back: ";
   for (int x = 0; x < 3; ++x) {
@@ -60,7 +60,7 @@ void TestMethods() {
     --count;
   }
   std::cout << std::endl;
-  std::cout << "Printing circular_vector: ";
+  std::cout << "Printing circular_buffer: ";
   Print(test1);
   if (count == test1.size())
     std::cout << "Push_back method passes" << std::endl;
@@ -68,7 +68,7 @@ void TestMethods() {
     std::cout << "Push_back method fails" << std::endl;
 
   std::cout << "======================================================" << std::endl;
-  std::cout << "TESTING CIRCULAR_VECTOR POP_FRONT METHOD" << std::endl;
+  std::cout << "TESTING CIRCULAR_BUFFER POP_FRONT METHOD" << std::endl;
 
   std::cout << "Popping front: ";
   for (int x = 0; x < 6; ++x) {
@@ -77,7 +77,7 @@ void TestMethods() {
     --count;
   }
   std::cout << std::endl;
-  std::cout << "Printing circular_vector: ";
+  std::cout << "Printing circular_buffer: ";
   Print(test1);
   if (count == test1.size())
     std::cout << "Pop_front method passes" << std::endl;
@@ -85,13 +85,13 @@ void TestMethods() {
     std::cout << "Pop_front method fails" << std::endl;
 
   std::cout << "======================================================" << std::endl;
-  std::cout << "TESTING CIRCULAR_VECTOR CLEAR METHOD" << std::endl;
+  std::cout << "TESTING CIRCULAR_BUFFER CLEAR METHOD" << std::endl;
 
-  std::cout << "Clearing CIRCULAR_VECTOR...";
+  std::cout << "Clearing CIRCULAR_BUFFER...";
   test1.clear();
   count = 0;
   std::cout << std::endl;
-  std::cout << "Printing circular_vector: ";
+  std::cout << "Printing circular_buffer: ";
   Print(test1);
   if (test1.size() == 0)
     std::cout << "Clear method passes" << std::endl;
@@ -99,7 +99,7 @@ void TestMethods() {
     std::cout << "Clear method fails" << std::endl;
 
   std::cout << "======================================================" << std::endl;
-  std::cout << "TESTING CIRCULAR_VECTOR PUSH_FRONT METHOD" << std::endl;
+  std::cout << "TESTING CIRCULAR_BUFFER PUSH_FRONT METHOD" << std::endl;
 
   std::cout << "Pushing front: ";
   for (int x = 0; x < 6; ++x) {
@@ -108,7 +108,7 @@ void TestMethods() {
     ++count;
   }
   std::cout << std::endl;
-  std::cout << "Printing circular_vector: ";
+  std::cout << "Printing circular_buffer: ";
   Print(test1);
   if (count == test1.size())
     std::cout << "Push_front method passes" << std::endl;
@@ -116,12 +116,12 @@ void TestMethods() {
     std::cout << "Push_front method fails" << std::endl;
 
   std::cout << "======================================================" << std::endl;
-  std::cout << "TESTING CIRCULAR_VECTOR ASSIGN METHOD" << std::endl;
+  std::cout << "TESTING CIRCULAR_BUFFER ASSIGN METHOD" << std::endl;
 
-  std::cout << "ASSIGNING CIRCULAR_VECTOR TO: n = 3, val = 4...";
+  std::cout << "ASSIGNING CIRCULAR_BUFFER TO: n = 3, val = 4...";
   test1.assign((size_t)3, (int)4);
   std::cout << std::endl;
-  std::cout << "Printing circular_vector: ";
+  std::cout << "Printing circular_buffer: ";
   Print(test1);
   if (test1.size() == 3)
     std::cout << "Assign method passes" << std::endl;
@@ -130,22 +130,22 @@ void TestMethods() {
   std::cout << "Note: other assign prototype using iterators is used and tested interally" << std::endl;
 
   std::cout << "======================================================" << std::endl;
-  std::cout << "TESTING CIRCULAR_VECTOR RESIZE METHOD" << std::endl;
+  std::cout << "TESTING CIRCULAR_BUFFER RESIZE METHOD" << std::endl;
 
-  std::cout << "RESIZING CIRCULAR_VECTOR TO: n = 1, val = 2...";
+  std::cout << "RESIZING CIRCULAR_BUFFER TO: n = 1, val = 2...";
   test1.resize(1, 2);
   std::cout << std::endl;
-  std::cout << "Printing circular_vector: ";
+  std::cout << "Printing circular_buffer: ";
   Print(test1);
   if (test1.size() == 1)
     std::cout << "Resize method passes" << std::endl;
   else
     std::cout << "Resize method fails" << std::endl;
 
-  std::cout << "RESIZING CIRCULAR_VECTOR TO: n = 6, val = 2...";
+  std::cout << "RESIZING CIRCULAR_BUFFER TO: n = 6, val = 2...";
   test1.resize(6, 2);
   std::cout << std::endl;
-  std::cout << "Printing circular_vector: ";
+  std::cout << "Printing circular_buffer: ";
   Print(test1);
   if (test1.size() == 6)
     std::cout << "Resize method passes" << std::endl;
@@ -153,9 +153,9 @@ void TestMethods() {
     std::cout << "Resize method fails" << std::endl;
 
   std::cout << "======================================================" << std::endl;
-  std::cout << "TESTING CIRCULAR_VECTOR RESERVE METHOD" << std::endl;
+  std::cout << "TESTING CIRCULAR_BUFFER RESERVE METHOD" << std::endl;
 
-  std::cout << "RESERVING CIRCULAR_VECTOR TO: n = 30...";
+  std::cout << "RESERVING CIRCULAR_BUFFER TO: n = 30...";
   test1.reserve(30);
   std::cout << std::endl;
   if (test1.capacity() == 30)
@@ -165,9 +165,9 @@ void TestMethods() {
   std::cout << "Note: tested and used more thoroughly interally" << std::endl;
 
   std::cout << "======================================================" << std::endl;
-  std::cout << "TESTING CIRCULAR_VECTOR SWAP METHOD" << std::endl;
+  std::cout << "TESTING CIRCULAR_BUFFER SWAP METHOD" << std::endl;
 
-  circular_vector<int> test2;
+  circular_buffer<int> test2;
   std::cout << "PUSHING BACK [0...9) to test2";
   for (int x = 0; x < 9; ++x) {
     test2.push_back(x);
@@ -187,15 +187,15 @@ void TestMethods() {
 
 }
 
-// Test %circular_vector object relational operators
+// Test %circular_buffer object relational operators
 void TestObjectOperators() {
   std::cout << "======================================================" << std::endl;
-  std::cout << "TESTING CIRCULAR_VECTOR OBJECT RELATIONAL OPERATORS" << std::endl;
+  std::cout << "TESTING CIRCULAR_BUFFER OBJECT RELATIONAL OPERATORS" << std::endl;
 
-  circular_vector<int> test1;
-  circular_vector<int> test2;
+  circular_buffer<int> test1;
+  circular_buffer<int> test2;
 
-  // TESTING %circular_vector == operator
+  // TESTING %circular_buffer == operator
   test1.clear();
   test1.resize(5, 1);
   test2.clear();
@@ -216,7 +216,7 @@ void TestObjectOperators() {
   else
     std::cout << "== operator passes" << std::endl;
 
-  // TESTING %circular_vector < operator
+  // TESTING %circular_buffer < operator
   test1.clear();
   test2.clear();
   test1.resize(5,1);
@@ -247,7 +247,7 @@ void TestObjectOperators() {
   else
     std::cout << "< operator passes" << std::endl;
 
-  // TESTING %circular_vector > operator
+  // TESTING %circular_buffer > operator
   test1.clear();
   test2.clear();
   test1.resize(5,1);
@@ -278,7 +278,7 @@ void TestObjectOperators() {
   else
     std::cout << "> operator passes" << std::endl;
 
-  // TESTING %circular_vector <= operator
+  // TESTING %circular_buffer <= operator
   test1.clear();
   test2.clear();
   test1.resize(5,1);
@@ -309,7 +309,7 @@ void TestObjectOperators() {
   else
     std::cout << "<= operator fails" << std::endl;
 
-  // TESTING %circular_vector >= operator
+  // TESTING %circular_buffer >= operator
   test1.clear();
   test2.clear();
   test1.resize(5,1);
@@ -343,14 +343,15 @@ void TestObjectOperators() {
 
 void TestIteratorOperators() {
   std::cout << "======================================================" << std::endl;
-  std::cout << "TESTING CIRCULAR_VECTOR ITERATOR RELATIONAL OPERATORS" << std::endl;
+  std::cout << "TESTING CIRCULAR_BUFFER ITERATOR RELATIONAL OPERATORS" << std::endl;
 
-  circular_vector<int> test1;
+  // TESTING CIRCULAR_BUFFER ITERATORS
+  circular_buffer<int> test1;
   test1.resize(10, 4);
 
   // Testing == operator
-  circular_vector<int>::iterator it = test1.begin();
-  circular_vector<int>::iterator it2 = test1.begin()+1;
+  circular_buffer<int>::iterator it = test1.begin();
+  circular_buffer<int>::iterator it2 = test1.begin()+1;
   if (it == it2)
     std::cout << "iterator == operator fails" << std::endl;
   else
@@ -444,15 +445,15 @@ void TestIteratorOperators() {
 
 void TestIteratorAccess() {
   std::cout << "======================================================" << std::endl;
-  std::cout << "TESTING CIRCULAR_VECTOR ITERATOR LOOP ELEMENT ACCESS" << std::endl;
+  std::cout << "TESTING CIRCULAR_BUFFER ITERATOR LOOP ELEMENT ACCESS" << std::endl;
 
-  circular_vector<int> test1;
+  circular_buffer<int> test1;
   test1.resize(6, 4);
-  std::cout << "Mutating circular_vector to 6 elements of value 4" << std::endl;
+  std::cout << "Mutating circular_buffer to 6 elements of value 4" << std::endl;
 
-  circular_vector<int>::iterator it = test1.begin();
+  circular_buffer<int>::iterator it = test1.begin();
 
-  std::cout << "Printing circular_vector: ";
+  std::cout << "Printing circular_buffer: ";
   size_t count = 0;
   while (it != test1.end()) {
     std::cout << *it << ",";
@@ -468,14 +469,14 @@ void TestIteratorAccess() {
 
   test1.clear();
   count = 0;
-  std::cout << "Mutating circular_vector to [0...13)" << std::endl;
+  std::cout << "Mutating circular_buffer to [0...13)" << std::endl;
   for (int x = 0; x < 13; ++x) {
     test1.push_back(x);
     std::cout << x << ",";
   }
   it = test1.begin();
   std::cout << std::endl;
-  std::cout << "Printing circular_vector: ";
+  std::cout << "Printing circular_buffer: ";
   while (it != test1.end()) {
     std::cout << *it << ",";
     ++it;
