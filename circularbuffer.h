@@ -1,12 +1,27 @@
+/* ---------------------------------------------------------------------------
+** This software is in the public domain, furnished "as is", without technical
+** support, and with no warranty, express or implied, as to its usefulness for
+** any purpose.
+**
+** circular_buffer.h
+** An STL-Compliant Circular Vector Container. Shares similarities to a Circular
+** Buffer Data Structure, except allows access to all elements in the container.
+** Contains all the same member functions as C++98 std::vector from the STL,
+** except for vector::insert and vector::erase.
+** Newly introduced member functions include: push_front and pop_front which
+** unlike the counterpart operations in std::vector are O(1) time (Constant).
+**
+**
+** Author: Konrad Janica
+** -------------------------------------------------------------------------*/
+
 #ifndef CIRCULAR_BUFFER_HPP_
 #define CIRCULAR_BUFFER_HPP_
 
 #include <algorithm> // std::swap, std::max, std::lexicographical_compare, std::equal
-#include <stdexcept> // std::invalid_argument
+#include <stdexcept> // std::invalid_argument, std::out_of_range
 
-#include <iostream> // debug TODO remove
-
-// Forward declaration of iterator
+// Forward declaration of iterator class
 template <typename T_noconst, typename T, typename element_type = typename T::value_type>
 class circular_buffer_iterator;
 
@@ -69,30 +84,30 @@ class circular_buffer {
     // ITERATORS
     // begin(), An iterator referring to buffer_[0], i.e. the first element
     // @warn  Iterator should be repositioned upon capacity reallocation or after push_front call
-    iterator         begin()       { return iterator(this, 0); }
-    const_iterator   begin() const { return const_iterator(this, 0); }
+    iterator         begin()              { return iterator(this, 0); }
+    const_iterator   begin() const        { return const_iterator(this, 0); }
     // end(), An iterator referring to buffer_[size()], i.e. past-the-end element
     // @warn  Iterator should be repositioned upon capacity reallocation or after push_back call
-    iterator         end()         { return iterator(this, size()); }
-    const_iterator   end() const   { return const_iterator(this, size()); }
+    iterator         end()                { return iterator(this, size()); }
+    const_iterator   end() const          { return const_iterator(this, size()); }
     // rbegin()
     // @warn  Iterator should be repositioned upon capacity reallocation or after push_back call
-    reverse_iterator rbegin()      { return reverse_iterator(end()); }
+    reverse_iterator rbegin()             { return reverse_iterator(end()); }
     const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
     // rend()
     // @warn  Iterator should be repositioned upon capacity reallocation or after push_front call
-    reverse_iterator rend()        { return reverse_iterator(begin()); }
-    const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
+    reverse_iterator rend()               { return reverse_iterator(begin()); }
+    const_reverse_iterator rend() const   { return const_reverse_iterator(begin()); }
 
     // ALLOCATORS:
     // @brief  Returns a copy of the allocator object associated with the @circular_buffer
     // @return  Read-only (constant) allocator
-    allocator_type get_allocator() const { return alloc_; };
+    allocator_type get_allocator() const  { return alloc_; };
 
     // CAPACITIES:
     // @brief  Returns the amount of elements in the %circular_buffer
     // @return  Read-only (constant) circular size
-    size_type size() const { return size_; };
+    size_type size() const     { return size_; };
     // @brief  Returns the maximum number of elements that the %circular_buffer can hold
     //         during dynamic allocation mode
     // @return  Read-only (constant) maximum size
@@ -127,10 +142,10 @@ class circular_buffer {
       // else n == size() => do nothing
     };
     // @brief  Returns size of allocated storage capacity
-    size_type capacity() const   { return capacity_; };
+    size_type capacity() const { return capacity_; };
     // @brief  Returns true if there are elements in the %circular_buffer
     // @return  Read-only (constant) True iff end index is in default state 
-    bool empty() const  { return !size_; };
+    bool empty() const         { return !size_; };
     // @brief  Request that the %circular_buffer capacity be at least enough to contain
     //         n elements. This function has no effect on the %circular_buffer size and
     //         cannot alter its elements.
@@ -248,7 +263,7 @@ class circular_buffer {
     // @return  Read/write reference to data
     // @warn  Calling this function with an argument @a n that is out of range
     //        causes undefined behaviour
-    reference operator [] (size_type n) { return normalize(n); };
+    reference operator [] (size_type n)             { return normalize(n); };
     // @brief  Provides access to the data contained in %circular_buffer
     // @param n The index of the element for which data should be accessed
     // @return  Read/write reference to data
@@ -281,7 +296,7 @@ class circular_buffer {
     //          in %circular_buffer
     // @warn  Calling this function on an empty container causes undefined
     //        behaviour
-    reference front()        { return buffer_[start_idx_]; };
+    reference front()              { return buffer_[start_idx_]; };
     // @return  Read-only (constant) reference to the first indexed element 
     //          in %circular_buffer
     // @warn  Calling this function on an empty container causes undefined
@@ -291,7 +306,7 @@ class circular_buffer {
     //          in %circular_buffer
     // @warn  Calling this function on an empty container causes undefined
     //        behaviour
-    reference back()         { return *(end()-1); };
+    reference back()               { return *(end()-1); };
     // @return  Read-only (constant) reference to the last indexed element 
     //          in %circular_buffer
     // @warn  Calling this function on an empty container causes undefined
@@ -394,7 +409,12 @@ bool operator >= (const circular_buffer<T, Alloc> &a, const circular_buffer<T, A
   return !(a<b);
 }
 
-// TODO
+// The iterator type for the %circular_buffer container.
+//   The following template class provides all variants of forward/reverse/const/noconst
+//   iterators using template properties.
+//   It is enough to instantiate it using %circular_buffer
+//   @sample usage: circular_buffer<int>::iterator it = foo.begin();
+//                  foo++... etc.
 template <typename T_noconst, typename T, typename element_type>
 class circular_buffer_iterator {
   public:
