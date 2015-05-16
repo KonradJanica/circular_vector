@@ -6,7 +6,40 @@ Shares similaries to a Circular Buffer Data Structure, except allows access to a
 Contains all the same member functions as C++98 std::vector from the STL, except for vector::insert and vector::erase. Newly introduced member functions include: push_front and pop_front which unlike the counterpart operations in std::vector are O(1) time (Constant).
 
 ##CONSTRUCTORS:##
-circular_vector(size_type capacity = kDefaultCapacity)
+**<dt>circular_vector::_circular_vector_</dt>**
+`explicit circular_vector(size_type capacity = kDefaultCapacity);`
+<dd><em>@brief</em>  <ul>Empty container constructor (default constructor). Constructs an empty container, with no elements. With a specified amount of reserved space.</ul></dd>
+<dd><em>@param  capacity</em>  <ul>The starting allocated storage reserve</ul></dd>
+<dd><em>@throws  std::invalid_argument</em>  <ul>With negative capacity values</ul></dd>
+
+**<dt>circular_vector::_circular_vector_</dt>**
+`explicit circular_vector(size_type n, const value_type &val, const allocator_type &alloc = allocator_type());`
+<dd><em>@brief</em>  <ul>Fill constructor. Constructs a container with @a n elements. Each element is a copy of @a val.</ul></dd>
+<dd><em>@param  n    The size and</em> <ul>capacity of the %circular_vector</ul></dd>
+<dd><em>@param  val  The data</em> <ul>value to fill the %circular_vector</ul></dd>
+<dd><em>@throws  std::invalid_argument</em>  <ul>With negative size values</ul></dd>
+
+**<dt>circular_vector::_circular_vector_</dt>**
+`template <class InputIterator>;`
+`circular_vector(InputIterator first, InputIterator last, const allocator_type& alloc = allocator_type());`
+<dd><em>@brief</em>  <ul>Range constructor. Constructs a container with as many elements as the range [first,last), with each element constructed from its corresponding element in that range, in the same order.</ul></dd>
+<dd><em>@param  first  The initial</em> <ul>position to start the copy from</ul></dd>
+<dd><em>@param  last   The final</em> <ul>exclusive position of the copy range</ul></dd>
+
+**<dt>circular_vector::_circular_vector_</dt>**
+`circular_vector(const circular_vector &x);`
+<dd><em>@brief</em>  <ul>Copy constructor. Constructs a container with a copy of each of the elements in x, in the same order.</ul></dd>
+<dd><em>@param  x  Another vector object</em> <ul>of the same type (with the same class template arguments T and Alloc), whose contents are copied.</ul></dd>
+<dd><em>@throws  std::length_error</em>  <ul>Upon catching any exception while assigning memory</ul></dd>
+
+**<dt>circular_vector::_operator=_</dt>**
+`circular_vector &operator = (const self_type &x);;`
+<dd><em>@brief</em>  <ul>Move constructor. Assigns new contents to the container, replacing its current contents, and modifying its size accordingly.</ul></dd>
+<dd><em>@param  x  A vector object</em> <ul>of the same type (i.e., with the same template parameters, T and Alloc).</ul></dd>
+
+##DESTRUCTORS:##
+**<dt>circular_vector::_~circular_vector_</dt>**
+<dd><em>@brief</em>  <ul>Destroys all container elements, and deallocates all the storage capacity allocated by the vector using its allocator.</ul>
 
 ##ITERATORS:##
 **<dt>circular_vector::_begin_</dt>**
