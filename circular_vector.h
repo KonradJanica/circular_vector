@@ -100,19 +100,20 @@ class circular_vector {
     // @param  first  The initial position to start the copy from
     // @param  last   The final exclusive position of the copy range
     template <class InputIterator>
-      vector (InputIterator first, InputIterator last, const allocator_type& alloc = allocator_type())
+      circular_vector(InputIterator first, InputIterator last, const allocator_type& alloc = allocator_type())
       : size_(0), capacity_(last-first), start_idx_((last-first)/2), end_idx_((last-first)/2),
       alloc_(alloc), array_(alloc_.allocate(last-first)) {
         assign(first,last);
       }
     // @brief  Copy constructor. Constructs a container with a copy of each of the elements in x, in the same order.
     // @param  x  Another vector object of the same type (with the same class template arguments T and Alloc), whose contents are copied.
+    // @throws  std::length_error  Upon catching any exception while assigning memory
     circular_vector(const circular_vector &x)
       : size_(0), capacity_(x.capacity()), start_idx_(x.capacity()/2), end_idx_(x.capacity()/2),
       alloc_(x.get_allocator()), array_(x.get_allocator().allocate(x.capacity())) {
         try {
           assign(x.begin(), x.end());
-        } catch {
+        } catch (...) {
           clear();
           alloc_.deallocate(array_, capacity_);
           throw std::length_error("out of memory");
