@@ -15,27 +15,27 @@ Contains all the same member functions as C++98 std::vector from the STL, except
 **<dt>circular_vector::_circular_vector_</dt>**
 `explicit circular_vector(size_type n, const value_type &val, const allocator_type &alloc = allocator_type());`
 <dd><em>@brief</em>  <ul>Fill constructor. Constructs a container with @a n elements. Each element is a copy of @a val.</ul></dd>
-<dd><em>@param  n    The size and</em> <ul>capacity of the %circular_vector</ul></dd>
-<dd><em>@param  val  The data</em> <ul>value to fill the %circular_vector</ul></dd>
+<dd><em>@param  n</em> <ul>The size and capacity of the %circular_vector</ul></dd>
+<dd><em>@param  val</em> <ul>The data value to fill the %circular_vector</ul></dd>
 <dd><em>@throws  std::invalid_argument</em>  <ul>With negative size values</ul></dd>
 
 **<dt>circular_vector::_circular_vector_</dt>**
 `template <class InputIterator>;`
 `circular_vector(InputIterator first, InputIterator last, const allocator_type& alloc = allocator_type());`
 <dd><em>@brief</em>  <ul>Range constructor. Constructs a container with as many elements as the range [first,last), with each element constructed from its corresponding element in that range, in the same order.</ul></dd>
-<dd><em>@param  first  The initial</em> <ul>position to start the copy from</ul></dd>
-<dd><em>@param  last   The final</em> <ul>exclusive position of the copy range</ul></dd>
+<dd><em>@param  first</em> <ul>The initial position to start the copy from</ul></dd>
+<dd><em>@param  last</em> <ul>The final exclusive position of the copy range</ul></dd>
 
 **<dt>circular_vector::_circular_vector_</dt>**
 `circular_vector(const circular_vector &x);`
 <dd><em>@brief</em>  <ul>Copy constructor. Constructs a container with a copy of each of the elements in x, in the same order.</ul></dd>
-<dd><em>@param  x  Another vector object</em> <ul>of the same type (with the same class template arguments T and Alloc), whose contents are copied.</ul></dd>
+<dd><em>@param  x</em> <ul>Another vector object of the same type (with the same class template arguments T and Alloc), whose contents are copied.</ul></dd>
 <dd><em>@throws  std::length_error</em>  <ul>Upon catching any exception while assigning memory</ul></dd>
 
 **<dt>circular_vector::_operator=_</dt>**
 `circular_vector &operator = (const self_type &x);;`
 <dd><em>@brief</em>  <ul>Move constructor. Assigns new contents to the container, replacing its current contents, and modifying its size accordingly.</ul></dd>
-<dd><em>@param  x  A vector object</em> <ul>of the same type (i.e., with the same template parameters, T and Alloc).</ul></dd>
+<dd><em>@param  x</em> <ul>A vector object of the same type (i.e., with the same template parameters, T and Alloc).</ul></dd>
 
 ##DESTRUCTORS:##
 **<dt>circular_vector::_~circular_vector_</dt>**
