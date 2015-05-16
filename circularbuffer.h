@@ -68,17 +68,26 @@ class circular_buffer {
 
     // ITERATORS
     // begin(), An iterator referring to buffer_[0], i.e. the first element
+    // @warn  Iterator should be repositioned upon capacity reallocation or after push_front call
     iterator         begin()       { return iterator(this, 0); }
     const_iterator   begin() const { return const_iterator(this, 0); }
     // end(), An iterator referring to buffer_[size()], i.e. past-the-end element
+    // @warn  Iterator should be repositioned upon capacity reallocation or after push_back call
     iterator         end()         { return iterator(this, size()); }
     const_iterator   end() const   { return const_iterator(this, size()); }
     // rbegin()
+    // @warn  Iterator should be repositioned upon capacity reallocation or after push_back call
     reverse_iterator rbegin()      { return reverse_iterator(end()); }
     const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
     // rend()
+    // @warn  Iterator should be repositioned upon capacity reallocation or after push_front call
     reverse_iterator rend()        { return reverse_iterator(begin()); }
     const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
+
+    // ALLOCATORS:
+    // @brief  Returns a copy of the allocator object associated with the @circular_buffer
+    // @return  Read-only (constant) allocator
+    allocator_type get_allocator() const { return alloc_; };
 
     // CAPACITIES:
     // @brief  Returns the amount of elements in the %circular_buffer
@@ -90,33 +99,32 @@ class circular_buffer {
     size_type max_size() const { return alloc_.max_size(); };
     // @brief  Resizes the %circular_buffer to specified size
     // @param  n  Number of elements the %circular_buffer should contain.
-    // @warn  Recreates entire %circular_buffer. O(n) time and space required.
+    // @param  val  The value of the element to fill the extra size
+    // @warn  This function changes the actual content of the container by inserting or
+    //        erasing elements from it (unless @a n = size()).
     //        If the number is smaller than the %circular_buffer's current size the
-    //        %circular_buffer is truncated, otherwise default constructed elements
-    //        are appended.
-    //        Capacity becomes the new size.
-    void resize(size_type n) {
+    //        %circular_buffer is truncated, otherwise default (or specified) elements
+    //        are appended until size reaches @a n size.
+    //        If capacity needs to increase => capacity becomes @a n.
+    //        Capacity never shrinks.
+    void resize(size_type n, const value_type &val = value_type()) {
       if (n > size()) {
-        circular_buffer temp(n);
-        temp.assign(begin(), end());
-        swap(temp);
+        if (n > capacity()) {
+          circular_buffer temp(n); // Capacity = n
+          temp.assign(begin(), end());
+          swap(temp);
+        }
+        // Push new valued elements until size() = n
+        while (n != size()) {
+          push_back(val);
+        }
       } else if (n < size()) {
         // A more efficient method of doing this can be used
-        circular_buffer temp(n);
-        temp.assign(begin(), begin()+n);
-        swap(temp);
+        // but must ensure wrapped arrays are addressed properly.
+        while (n != size())
+          pop_back();
       }
-    };
-    // @brief  Resizes the %circular_buffer to specified size
-    // @param  n    Number of elements the %circular_buffer should contain.
-    // @param  val  Data with which new elements should be populated.
-    // @warn  Recreates entire %circular_buffer. O(n) time and space required.
-    //        If the number is smaller than the %circular_buffer's current size the
-    //        %circular_buffer is truncated, otherwise new elements are populated
-    //        given data.
-    //        Capacity grows as per push_back(), i.e. Amortized O(n) space
-    void resize(size_type n, const value_type &val) {
-      assign(n, val);
+      // else n == size() => do nothing
     };
     // @brief  Returns size of allocated storage capacity
     size_type capacity() const   { return capacity_; };
@@ -211,6 +219,16 @@ class circular_buffer {
       buffer_[end_idx_] = val;
       increment(kEnd);
     }
+    // @brief  Exchanges the content of the container by the content of x, which is
+    //         another %circular_buffer object of the same type. Sizes may differ.
+    // @param  x  The %circular_buffer of the same type to swap with.
+    void swap(circular_buffer &x) {
+      std::swap(size_,       x.size_);
+      std::swap(capacity_,   x.capacity_);
+      std::swap(start_idx_,  x.start_idx_);
+      std::swap(end_idx_,    x.end_idx_);
+      std::swap(buffer_,     x.buffer_);
+    }
     // @brief  Removes all elements from the @circular_buffer (which are destroyed),
     //         leaving the container with a size of 0.
     // @warn  If the elements themselves are pointers, the pointed-to memory is not
@@ -243,7 +261,9 @@ class circular_buffer {
     // @throw  std::out_of_range  If @a n is an invalid index
     reference at(size_type n) {
       if (n > size()-1)
-        throw std::out_of_range();
+        throw std::out_of_range("index larger than last index");
+      if (n < 0)
+        throw std::out_of_range("negative index");
       return normalize(n);
     };
     // @brief  Provides access to the data contained in %circular_buffer
@@ -252,7 +272,9 @@ class circular_buffer {
     // @throw  std::out_of_range  If @a n is an invalid index
     const_reference at(size_type n) const {
       if (n > size()-1)
-        throw std::out_of_range();
+        throw std::out_of_range("index larger than last index");
+      if (n < 0)
+        throw std::out_of_range("negative index");
       return normalize(n);
     };
     // @return  Read/Write reference to the first indexed element 
@@ -292,15 +314,6 @@ class circular_buffer {
     value_type * buffer_;
 
     // HELPER FUNCTIONS:
-    // @brief  Swaps the current %circular_buffer container with this one
-    // @param  other  The %circular_buffer to swap with
-    void swap(circular_buffer &other) {
-      std::swap(size_,   other.size_);
-      std::swap(capacity_,   other.capacity_);
-      std::swap(start_idx_,   other.start_idx_);
-      std::swap(end_idx_,   other.end_idx_);
-      std::swap(buffer_,   other.buffer_);
-    }
     // @brief  Increments the specified index and changes size appropriately
     // @param  index  The enum representing 0 - start_idx_ or 1 - end_idx_
     void increment(size_type index) {
@@ -344,121 +357,141 @@ class circular_buffer {
     // @return  Read/write reference to data
     // @warn  Calling this function with an argument @a n that is out of range
     //        causes undefined behaviour
-    reference normalize(size_type n) {
-      return buffer_[(start_idx_ + n) % capacity_];
+    reference normalize(size_type n) const {
+      return buffer_[(start_idx_ + n) % capacity()];
     }
 };
 
+// RELATIONAL OPERATORS:
+// a==b
 template <typename T, typename Alloc>
-bool operator == (const circular_buffer<T, Alloc> &a, const circular_buffer<T, Alloc> &b) {
+bool operator==(const circular_buffer<T, Alloc> &a, const circular_buffer<T, Alloc> &b) {
   return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin());
 }
-
+// a!=b which is equivalent to !(a==b)
 template <typename T, typename Alloc>
 bool operator != (const circular_buffer<T, Alloc> &a, const circular_buffer<T, Alloc> &b) {
-  return a.size() != b.size() || !std::equal(a.begin(), a.end(), b.begin());
+  return !(a==b);
 }
-
+// a<b
 template <typename T, typename Alloc>
 bool operator < (const circular_buffer<T, Alloc> &a, const circular_buffer<T, Alloc> &b) {
   return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end());
 }
+// a>b
+template <typename T, typename Alloc>
+bool operator > (const circular_buffer<T, Alloc> &a, const circular_buffer<T, Alloc> &b) {
+  return std::lexicographical_compare(b.begin(), b.end(), a.begin(), a.end());
+}
+// a<=b which is equivalent to !(b<a)
+template <typename T, typename Alloc>
+bool operator <= (const circular_buffer<T, Alloc> &a, const circular_buffer<T, Alloc> &b) {
+  return !(b<a);
+}
+// a>=b which is equivalent to !(a<b)
+template <typename T, typename Alloc>
+bool operator >= (const circular_buffer<T, Alloc> &a, const circular_buffer<T, Alloc> &b) {
+  return !(a<b);
+}
 
-template <typename T_noconst, typename T,
-         typename element_type>
-         class circular_buffer_iterator {
-           public:
-             typedef circular_buffer_iterator<T_noconst,T,element_type> self_type;
+// TODO
+template <typename T_noconst, typename T, typename element_type>
+class circular_buffer_iterator {
+  public:
+    typedef circular_buffer_iterator<T_noconst,T,element_type> self_type;
 
-             typedef std::random_access_iterator_tag     iterator_category;
-             typedef typename T::value_type              value_type;
-             typedef typename T::size_type               size_type;
-             typedef typename T::pointer                 pointer;
-             typedef typename T::const_pointer           const_pointer;
-             typedef typename T::reference               reference;
-             typedef typename T::const_reference         const_reference;
-             typedef typename T::difference_type         difference_type;
+    typedef std::random_access_iterator_tag     iterator_category;
+    typedef typename T::value_type              value_type;
+    typedef typename T::size_type               size_type;
+    typedef typename T::pointer                 pointer;
+    typedef typename T::const_pointer           const_pointer;
+    typedef typename T::reference               reference;
+    typedef typename T::const_reference         const_reference;
+    typedef typename T::difference_type         difference_type;
 
-             circular_buffer_iterator(T * cbuffer, size_type index)
-               : cbuffer_(cbuffer), index_(index) {};
+    circular_buffer_iterator(T * cbuffer, size_type index)
+      : cbuffer_(cbuffer), index_(index) {};
 
-             // Converting a non-const iterator to a const iterator
-             circular_buffer_iterator(const circular_buffer_iterator<T_noconst,
-                 T_noconst, typename T_noconst::value_type> &other) 
-               : cbuffer_(other.cbuffer_), index_(other.index_) {};
+    // Converting a non-const iterator to a const iterator
+    circular_buffer_iterator(const circular_buffer_iterator<T_noconst,
+        T_noconst, typename T_noconst::value_type> &other)
+      : cbuffer_(other.cbuffer_), index_(other.index_) {};
 
-             friend class circular_buffer_iterator<T, const T, const element_type>;
+    friend class circular_buffer_iterator<const T, const T, const element_type>;
 
-             element_type &operator * ()  { return (*cbuffer_)[index_]; };
-             element_type *operator -> () { return &(operator * ()); };
+    // Use compiler generated copy constructor, copy assignment operator
+    // and destructor
 
-             self_type &operator ++ () {
-               index_++;
-               return *this;
-             }
-             self_type operator ++ (int) {
-               self_type tmp(*this);
-               ++(*this);
-               return tmp;
-             }
+    element_type &operator * ()  { return (*cbuffer_)[index_]; };
+    element_type *operator -> () { return &(operator * ()); };
 
-             self_type &operator -- () {
-               index_--;
-               return *this;
-             }
-             self_type operator -- (int) {
-               self_type tmp(*this);
-               --(*this);
-               return tmp;
-             }
+    self_type &operator ++ () {
+      index_++;
+      return *this;
+    }
+    self_type operator ++ (int) {
+      self_type temp(*this);
+      ++(*this);
+      return temp;
+    }
 
-             self_type operator + (difference_type n) const {
-               self_type tmp(*this);
-               tmp.index_ += n;
-               return tmp;
-             }
-             self_type &operator += (difference_type n) {
-               index_ += n;
-               return *this;
-             }
+    self_type &operator -- () {
+      index_--;
+      return *this;
+    }
+    self_type operator -- (int) {
+      self_type temp(*this);
+      --(*this);
+      return temp;
+    }
 
-             self_type operator - (difference_type n) const {
-               self_type tmp(*this);
-               tmp.index_ -= n;
-               return tmp;
-             }
-             self_type &operator -= (difference_type n) {
-               index_ -= n;
-               return *this;
-             }
+    self_type operator + (difference_type n) const {
+      self_type temp(*this);
+      temp.index_ += n;
+      return temp;
+    }
+    self_type &operator += (difference_type n) {
+      index_ += n;
+      return *this;
+    }
 
-             difference_type operator - (const self_type &c) const {
-               return index_ - c.index_;
-             }
+    self_type operator - (difference_type n) const {
+      self_type temp(*this);
+      temp.index_ -= n;
+      return temp;
+    }
+    self_type &operator -= (difference_type n) {
+      index_ -= n;
+      return *this;
+    }
 
-             bool operator == (const self_type &other) const {
-               return index_ == other.index_ && cbuffer_ == other.cbuffer_;
-             }
-             bool operator != (const self_type &other) const {
-               return index_ != other.index_ && cbuffer_ == other.cbuffer_;
-             }
-             bool operator >( const self_type &other) const {
-               return index_ > other.index_;
-             }
-             bool operator >= (const self_type &other) const {
-               return index_ >= other.index_;
-             }
-             bool operator <( const self_type &other) const {
-               return index_ < other.index_;
-             }
-             bool operator <= (const self_type &other) const {
-               return index_ <= other.index_;
-             }
+    difference_type operator - (const self_type &c) const {
+      return index_ - c.index_;
+    }
 
-           private:
-             T * cbuffer_;
-             size_type  index_;
-         };
+    bool operator == (const self_type &other) const {
+      return index_ == other.index_ && cbuffer_ == other.cbuffer_;
+    }
+    bool operator != (const self_type &other) const {
+      return index_ != other.index_ && cbuffer_ == other.cbuffer_;
+    }
+    bool operator >( const self_type &other) const {
+      return index_ > other.index_;
+    }
+    bool operator >= (const self_type &other) const {
+      return index_ >= other.index_;
+    }
+    bool operator <( const self_type &other) const {
+      return index_ < other.index_;
+    }
+    bool operator <= (const self_type &other) const {
+      return index_ <= other.index_;
+    }
+
+  private:
+    T * cbuffer_;
+    size_type  index_;
+};
 
 template <typename circular_buffer_iterator_t>
 circular_buffer_iterator_t operator + (const typename circular_buffer_iterator_t::difference_type &a,
