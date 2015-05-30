@@ -314,8 +314,8 @@ class circular_vector {
     // @warn  If the elements themselves are pointers, the pointed-to memory is not
     //        touched in any way. Managing the pointer is the user's responsibility.
     void clear() {
-      for (size_type x = 0; x < capacity(); ++x) {
-        alloc_.destroy(array_ + x);
+      for (size_type x = 0; x < size(); ++x) {
+        alloc_.destroy(array_ + (start_idx_ + x) % capacity());
       }
       start_idx_ = capacity() / 2;
       end_idx_ = capacity() /2;
