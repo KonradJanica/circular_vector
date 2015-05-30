@@ -284,7 +284,8 @@ class circular_vector {
       }
 
       decrement(kStart);
-      array_[start_idx_] = val;
+      // array_[start_idx_] = val;
+      alloc_.construct(array_ + start_idx_, val);
     }
     // @brief  Adds an element to the tail of the %circular_vector
     // @param  val  Element to be added
