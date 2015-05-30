@@ -500,7 +500,7 @@ class circular_vector_iterator {
         T_noconst, typename T_noconst::value_type> &other)
       : carray_(other.carray_), index_(other.index_) {};
 
-    friend class circular_vector_iterator<const T, const T, const element_type>;
+    friend class circular_vector_iterator<T, const T, const element_type>;
 
     // Use compiler generated copy constructor, copy assignment operator
     // and destructor
